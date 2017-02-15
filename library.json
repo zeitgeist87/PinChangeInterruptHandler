@@ -15,7 +15,7 @@
         "url": "https://github.com/zeitgeist87/PinChangeInterruptHandler"
     },
     "version": "0.1",
-    "homepage": "https://www.pjrc.com/teensy/td_libs_OneWire.html",
+    "homepage": "https://github.com/zeitgeist87/PinChangeInterruptHandler",
     "frameworks": "Arduino",
     "examples": [
         "examples/*/*.ino"
