@@ -15,9 +15,84 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if defined(__AVR__)
 #include <avr/interrupt.h>
-#include "PinChangeInterruptBoards.h"
+#endif
+
 #include "PinChangeInterruptHandler.h"
+#include "PinChangeInterruptBoards.h"
+
+#ifndef NOT_AN_INTERRUPT
+  #define NOT_AN_INTERRUPT -1
+#endif
+
+#ifdef PCINT_FALLBACK
+
+// Low performance fallback for unsupported MCUs
+static PinChangeInterruptHandler *handlers[EXTERNAL_NUM_INTERRUPTS];
+static bool state[EXTERNAL_NUM_INTERRUPTS];
+
+#ifdef PCINT_USE_INTERRUPT_MAP
+static byte interruptMap[EXTERNAL_NUM_INTERRUPTS];
+#define interruptToDigitalPin(p) (interruptMap[p])
+
+static inline void initInterruptMap() {
+  static bool init = true;
+
+  if (init) {
+    for (byte i = 0; i < 255; ++i) {
+      byte pin = digitalPinToInterrupt(i);
+      if (pin != NOT_AN_INTERRUPT && pin < EXTERNAL_NUM_INTERRUPTS) {
+        interruptMap[pin] = i;
+      }
+    }
+
+    init = false;
+  }
+}
+
+#else
+#define interruptToDigitalPin(p) (p)
+#endif
+
+int8_t digitalPinToPCINT(int8_t pin) {
+  return digitalPinToInterrupt(pin);
+}
+
+static void changeInterrupt() {
+  for (byte i = 0; i < EXTERNAL_NUM_INTERRUPTS; ++i) {
+    bool data = digitalRead(interruptToDigitalPin(i));
+    if (data != state[i]) {
+      state[i] = data;
+      PinChangeInterruptHandler *handler = handlers[i];
+      if (handler)
+        handler->handlePCInterrupt(i, data);
+    }
+  }
+}
+
+void PinChangeInterruptHandler::attachPCInterrupt(int8_t pcIntNum) {
+  #ifdef PCINT_USE_INTERRUPT_MAP
+  initInterruptMap();
+  #endif
+
+  if (pcIntNum == NOT_AN_INTERRUPT || pcIntNum >= EXTERNAL_NUM_INTERRUPTS)
+    return;
+
+  state[pcIntNum] = digitalRead(interruptToDigitalPin(pcIntNum));
+  attachInterrupt(pcIntNum, changeInterrupt, CHANGE);
+  handlers[pcIntNum] = this;
+}
+
+void PinChangeInterruptHandler::detachPCInterrupt(int8_t pcIntNum) {
+  if (pcIntNum == NOT_AN_INTERRUPT || pcIntNum >= EXTERNAL_NUM_INTERRUPTS)
+    return;
+
+  detachInterrupt(pcIntNum);
+  handlers[pcIntNum] = 0;
+}
+
+#else
 
 #if defined(PCINT3_vect)
   #define PORT_COUNT 4
@@ -46,6 +121,13 @@
 #endif
 
 static PinChangeInterruptHandler *handlers[PORT_COUNT * 8];
+
+// Macro copied from PinChangeInterrupt library https://github.com/NicoHood/PinChangeInterrupt
+// convert a normal pin to its PCINT number (0 - max 23), used by the user
+// calculates the pin by the Arduino definitions
+int8_t digitalPinToPCINT(int8_t p) {
+  return digitalPinToPCICR(p) ? ((8 * digitalPinToPCICRbit(p)) + digitalPinToPCMSKbit(p)) : NOT_AN_INTERRUPT;
+}
 
 void PinChangeInterruptHandler::attachPCInterrupt(int8_t pcIntNum) {
   byte port = pcIntNum / 8;
@@ -117,4 +199,6 @@ static void changeInterrupt(byte port, byte state) {
 #endif
 #if defined(PCINT3_vect)
   ISR(PCINT3_vect) { changeInterrupt(3, PCINT_INPUT_PORT3); }
+#endif
+
 #endif

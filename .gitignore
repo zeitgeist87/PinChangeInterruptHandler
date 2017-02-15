@@ -2,3 +2,9 @@
 .cproject
 .project
 *.swp
+/Debug/
+.pioenvs
+.piolibdeps
+.clang_complete
+.gcc-flags.json
+*.gch

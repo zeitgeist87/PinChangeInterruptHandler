@@ -72,7 +72,29 @@ THE SOFTWARE.
 #define PCINT_INPUT_PORT3 PIND
 
 #else // Microcontroller not supported
-#error PinChangeInterrupt library does not support this MCU.
+
+#define PCINT_FALLBACK 1
+#define PCINT_USE_INTERRUPT_MAP 1
+
+#if defined(_VARIANT_ARDUINO_STM32_) || defined(ENERGIA)
+
+#include "wiring_private.h"
+
+#ifndef digitalPinToInterrupt
+#define digitalPinToInterrupt(p) (p)
+#warning No digitalPinToInterrupt() available
+
+#ifndef EXTERNAL_NUM_INTERRUPTS
+#define EXTERNAL_NUM_INTERRUPTS 32
+#endif
+
+#undef PCINT_USE_INTERRUPT_MAP
+
+#endif
+
+#endif
+
+#warning PinChangeInterrupt library does not support this MCU.
 #endif
 
 //================================================================================

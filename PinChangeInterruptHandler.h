@@ -18,21 +18,14 @@
 #ifndef PINCHANGEINTERRUPTHANDLER_H
 #define PINCHANGEINTERRUPTHANDLER_H
 
-#if defined(ARDUINO) && ARDUINO >= 100
-  #include "Arduino.h"
-#elif defined(ENERGIA)
-  #include "Energia.h"
+#if ARDUINO >= 100
+#include "Arduino.h"
 #else
-  #include "WProgram.h"
+#include "WProgram.h"
+#include "pins_arduino.h"
 #endif
 
-
-// Macro copied from PinChangeInterrupt library https://github.com/NicoHood/PinChangeInterrupt
-// convert a normal pin to its PCINT number (0 - max 23), used by the user
-// calculates the pin by the Arduino definitions
-#define digitalPinToPinChangeInterrupt(p) (digitalPinToPCICR(p) ? ((8 * digitalPinToPCICRbit(p)) + digitalPinToPCMSKbit(p)) : NOT_AN_INTERRUPT)
-// alias for shorter writing
-#define digitalPinToPCINT digitalPinToPinChangeInterrupt
+int8_t digitalPinToPCINT(int8_t pin);
 
 class PinChangeInterruptHandler {
 public:
