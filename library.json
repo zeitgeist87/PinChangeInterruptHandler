@@ -1,0 +1,23 @@
+{
+    "name": "PinChangeInterruptHandler",
+    "description": "Object-oriented library to handle pin change interrupts",
+    "keywords": "object-oriented, pinchange, interrupt",
+    "authors": [
+        {
+            "name": "Andreas Rohner",
+            "email": "andreas.rohner@gmx.net",
+            "url": "https://andreasrohner.at",
+            "maintainer": true
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/zeitgeist87/PinChangeInterruptHandler"
+    },
+    "version": "0.1",
+    "homepage": "https://www.pjrc.com/teensy/td_libs_OneWire.html",
+    "frameworks": "Arduino",
+    "examples": [
+        "examples/*/*.ino"
+    ]
+}
